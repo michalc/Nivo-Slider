@@ -676,6 +676,28 @@ MivoSlider.Effects.fade = new Class({
 	}
 });
 
+MivoSlider.Effects.fold = new Class({
+	Extends: MivoSlider.Effect.Sliced,
+	
+	initialize: function(mivoSlider, options) {
+		this.parent(mivoSlider, options);
+		this.slices.each(function(slice, i) {
+			this.animateStyles[i] = {opacity: 1, width: slice.getStyle('width').toInt()};
+		}, this);
+		
+		this.startStyles = {opacity: 0, height: '100%', width: 0};
+	}
+});
+
+MivoSlider.Effects.foldLeft = new Class({
+	Extends: MivoSlider.Effects.fold,
+	
+	initialize: function(mivoSlider, options) {
+		this.parent(mivoSlider, options);
+		this.delays = this.delays.reverse();
+	}
+});
+
 Element.implement({
 	mivoSlider: function(options) {
 		return new MivoSlider(this, options);
