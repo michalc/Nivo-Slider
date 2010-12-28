@@ -600,7 +600,7 @@ MivoSlider.Effect.Sliced = new Class({
 	
 	startSlice: function(slice, i) {
 		this.slices[i].setStyles(typeOf(this.startStyles) == 'array' ? this.startStyles[i] : this.startStyles);
-		this.animateSlice.delay(this.delays[i], this, [slice, i]);
+		this.animateSlice.delay(typeOf(this.delays) == 'array' ? this.delays[i] : this.delays, this, [slice, i]);
 	},
 	
 	animateSlice: function(slice, i) {
@@ -662,6 +662,17 @@ MivoSlider.Effects.sliceUpLeft = new Class({
 	initialize: function(mivoSlider, options) {
 		this.parent(mivoSlider, options);		
 		this.delays = this.delays.reverse();
+	}
+});
+
+MivoSlider.Effects.fade = new Class({
+	Extends: MivoSlider.Effect.Sliced,
+	
+	initialize: function(mivoSlider, options) {
+		this.parent(mivoSlider, options);		
+		this.delays = 0;
+		this.startStyles = {opacity: 0, height: '100%'};
+		this.animateStyles = {opacity: 1};
 	}
 });
 
