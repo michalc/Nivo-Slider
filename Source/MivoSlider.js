@@ -551,6 +551,7 @@ MivoSlider.Effect.Sliced = new Class({
 		//Add initial slices
 		this.slices = [];
 		this.fx = [];
+		this.delays = [];
 
 		if (!this.occlude('mivoSlider.sliced', this.slider)) {
 			for (var i = 0; i < this.options.slices; i++) {
@@ -570,11 +571,16 @@ MivoSlider.Effect.Sliced = new Class({
 						onComplete: this.finishSlice.pass([this.slices[i], i], this)
 					}
 				));
+				this.delays[i] = this.calculateDelay(i);
 			}
 		}
 		var g = new Group(this.fx);
 		g.addEvent('complete', this.finish.bind(this));
 		
+	},
+	
+	calculateDelay: function(i) {
+		return this.options.timeInit + i * this.options.timeBuff;
 	},
 	
 	start: function() {
@@ -594,7 +600,7 @@ MivoSlider.Effect.Sliced = new Class({
 	
 	startSlice: function(slice, i) {
 		this.slices[i].setStyles(typeOf(this.startStyles) == 'array' ? this.startStyles[i] : this.startStyles);
-		this.animateSlice.delay(this.options.timeInit + i * this.options.timeBuff, this, [slice, i]);
+		this.animateSlice.delay(this.delays[i], this, [slice, i]);
 	},
 	
 	animateSlice: function(slice, i) {
@@ -635,8 +641,7 @@ MivoSlider.Effects.sliceDownLeft = new Class({
 	
 	initialize: function(mivoSlider, options) {
 		this.parent(mivoSlider, options);		
-		this.slices = this.slices.reverse();
-		this.fx = this.fx.reverse();
+		this.delays = this.delays.reverse();
 	}
 });
 
@@ -656,8 +661,7 @@ MivoSlider.Effects.sliceUpLeft = new Class({
 	
 	initialize: function(mivoSlider, options) {
 		this.parent(mivoSlider, options);		
-		this.slices = this.slices.reverse();
-		this.fx = this.fx.reverse();
+		this.delays = this.delays.reverse();
 	}
 });
 
