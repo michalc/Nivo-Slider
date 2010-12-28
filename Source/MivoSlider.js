@@ -363,17 +363,6 @@ var MivoSlider = new Class({
 			slider.getElement('.nivo-caption').fade('out');
 		}
 		
-		
-		
-		// Set new slice backgrounds
-		//slider.getElements('.nivo-slice').each(function(slice, i) {
-		//	var sliceWidth = Math.round(slider.getStyle('width').toInt() / settings.slices);
-		//	slice.setStyles({
-		//		height:'0px',
-		//		opacity:'0', 
-		//		background: 'url("'+ this.currentImage.get('src') +'") no-repeat -'+ ((sliceWidth + (i * sliceWidth)) - sliceWidth) +'px 0%' });
-		//}, this);
-		
 		//if (this.options.effect == 'random'){
 		//	var anims = ["sliceDownRight","sliceDownLeft","sliceUpRight","sliceUpLeft","sliceUpDown","sliceUpDownLeft","fold","fade"];
 		//	this.randAnim = anims[Math.floor(Math.random()*(anims.length + 1))];
@@ -389,93 +378,6 @@ var MivoSlider = new Class({
 		// Run effects
 		this.running = true;
 		this.effect.start();
-		/*if (this.options.effect == 'sliceDown' || this.options.effect == 'sliceDownRight' || this.randAnim == 'sliceDownRight' ||
-			this.options.effect == 'sliceDownLeft' || this.randAnim == 'sliceDownLeft'){
-			var timeBuff = 0;
-			var i = 0;
-			var slices = slider.getElements('.nivo-slice');
-			var height = slider.getStyle('height').toInt();
-			if (this.options.effect == 'sliceDownLeft' || this.options.randAnim == 'sliceDownLeft') slices = slices.reverse();
-			slices.each(function(slice, i) {
-				slice.setStyle('top','0px');
-				slice.set('morph', {duration: this.options.animSpeed});
-				if (i == this.options.slices-1) {	
-					slice.get('morph').addEvent('complete', function() {this.fireEvent('nivo:animFinished')}.bind(this));
-				}
-				setTimeout(function() {
-					slice.morph({ height:height, opacity:'1.0'});
-				}, (100 + timeBuff));
-				timeBuff += 50;
-			}, this);
-		} 
-		else if (this.options.effect == 'sliceUp' || this.options.effect == 'sliceUpRight' || this.randAnim == 'sliceUpRight' ||
-				this.options.effect == 'sliceUpLeft' || this.randAnim == 'sliceUpLeft'){
-			var timeBuff = 0;
-			var i = 0;
-			var slices = slider.getElements('.nivo-slice');
-			var height = slider.getStyle('height').toInt();
-			if (this.options.effect == 'sliceUpLeft' || this.randAnim == 'sliceUpLeft') slices = slices.reverse();
-			slices.each(function(slice, i) {
-				slice.setStyle('bottom', '0px');
-				slice.set('morph', {duration: this.options.animSpeed});
-				if (i == this.options.slices-1) {	
-					slice.get('morph').addEvent('complete', function() {this.fireEvent('nivo:animFinished')}.bind(this));
-				}
-				setTimeout(function() {
-					slice.morph({ height:height, opacity:'1.0'});
-				}, (100 + timeBuff));
-				timeBuff += 50;
-			}, this);
-		}
-		else if (this.options.effect == 'sliceUpDown' || this.options.effect == 'sliceUpDownRight' || this.randAnim == 'sliceUpDown' || 
-				this.options.effect == 'sliceUpDownLeft' || this.randAnim == 'sliceUpDownLeft'){
-			var timeBuff = 0;
-			var slices = slider.getElements('.nivo-slice');
-			var height = slider.getStyle('height').toInt();
-			if (this.options.effect == 'sliceUpDownLeft' || this.randAnim == 'sliceUpDownLeft') slices = slices.reverse();
-			slices.each(function(slice, i) {
-				if (i % 2 == 0) {
-					slice.setStyle('top','0px');
-				} else {
-					slice.setStyle('bottom','0px');
-				}
-				slice.set('morph', {duration: this.options.animSpeed});
-				if (i == settings.slices - 1) {
-					slice.get('morph').addEvent('complete', function() {this.fireEvent('nivo:animFinished')}.bind(this));
-				}
-				setTimeout(function() {
-					slice.morph({height:height, opacity:'1.0'});
-				}, (100 + timeBuff));
-				timeBuff += 50;
-			}, this);
-		} 
-		else if (this.options.effect == 'fold' || this.randAnim == 'fold') {
-			var timeBuff = 0;
-			var slices = slider.getElements('.nivo-slice');
-			slices.each(function(slice, i) {
-				var origWidth = slice.getStyle('width').toInt();
-				slice.setStyles({top:'0px', height:'100%', width:'0px'});
-				slice.set('morph', {duration: this.options.animSpeed});
-				if (i == settings.slices - 1) {
-					slice.get('morph').addEvent('complete', function() {this.fireEvent('nivo:animFinished')}.bind(this));
-				}
-				setTimeout(function(){
-					slice.morph({ width:origWidth, opacity:'1.0'});
-				}, (100 + timeBuff));
-				timeBuff += 50;
-			}, this);
-		}  
-		else if (this.options.effect == 'fade' || this.randAnim == 'fade'){
-			var slices = slider.getElements('.nivo-slice');
-			slices.each(function(slice, i) {
-				slice.setStyle('height','100%');
-				slice.set('morph', {duration: this.options.animSpeed*2});
-				if (i == settings.slices - 1) {
-					slice.get('morph').addEvent('complete', function() {this.fireEvent('nivo:animFinished')}.bind(this));
-				}
-				slice.morph({opacity:'1.0'});
-			}, this);
-		}*/
 	},
        
     // For debugging
