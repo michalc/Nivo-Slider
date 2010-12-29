@@ -35,6 +35,8 @@ var MivoSlider = new Class({
 		manualAdvance: false,
 		captionOpacity: 0.8,
 		
+		randomAnimations: ["sliceDownRight","sliceDownLeft","sliceUpRight","sliceUpLeft","sliceUpDown","sliceUpDownLeft","fold","fade"],
+		
 		effectOptions: {
 			slideUp: {
 				slices: 15,
@@ -72,6 +74,7 @@ var MivoSlider = new Class({
        
 		//Find our slider children
 		var kids = slider.getChildren();
+		this.kids = kids;
 		kids.each(function(child) {
 			var link = '';
 			if (!child.get('tag') == 'img') {
@@ -155,7 +158,7 @@ var MivoSlider = new Class({
 		//In the words of Super Mario "let's a go!"
 		var timer = 0;
 		if (!this.options.manualAdvance && kids.length > 1){
-			timer = this.nivoRun.periodical(this.options.pauseTime, this, [slider, kids, this.options, false]);
+			timer = this.nivoRun.periodical(this.options.pauseTime, this, false);
 		}
 
        //Add Direction nav
@@ -181,14 +184,14 @@ var MivoSlider = new Class({
 				clearInterval(timer);
 				timer = '';
 				this.currentSlide-=2;
-				this.nivoRun(slider, kids, this.options, 'prev');
+				this.nivoRun('prev');
 			}.bind(this));
 			
 			slider.addEvent('click:relay(a.nivo-nextNav)', function() {
 				if (this.running) return false;
 				clearInterval(timer);
 				timer = '';
-				this.nivoRun(slider, kids, this.options, 'next');
+				this.nivoRun('next');
 			}.bind(this));
 		}
        
@@ -222,7 +225,7 @@ var MivoSlider = new Class({
                timer = '';
                slider.setStyle('background','url("'+ this.currentImage.get('src') +'") no-repeat');
                this.currentSlide = document.id(clicked).get('rel') - 1;
-               this.nivoRun(slider, kids, this.options, 'control');
+               this.nivoRun('control');
            }.bind(this));
 		}
        
@@ -235,13 +238,13 @@ var MivoSlider = new Class({
 						clearInterval(timer);
 						timer = '';
 						this.currentSlide-=2;
-						this.nivoRun(slider, kids, settings, 'prev');
+						this.nivoRun('prev');
 					},
 					right: function() {
 						if (this.running) return false;
 						clearInterval(timer);
 						timer = '';
-						this.nivoRun(slider, kids, settings, 'next');
+						this.nivoRun('next');
 					}
 				}
 			});
@@ -259,7 +262,7 @@ var MivoSlider = new Class({
 					this.paused = false;
 					// Restart the timer
 					if (timer == '' && !this.options.manualAdvance) {
-						timer = this.nivoRun.periodical(this.options.pauseTime, this, [slider, kids, this.options, false]);
+						timer = this.nivoRun.periodical(this.options.pauseTime, this, false);
 					}
 				}.bind(this)
 			});
@@ -280,7 +283,7 @@ var MivoSlider = new Class({
 			}
 			//Restart the timer
 			if (timer == '' && !this.paused && !settings.manualAdvance) {
-				timer = this.nivoRun.periodical(this.options.pauseTime, this, [slider, kids, settings, false]);
+				timer = this.nivoRun.periodical(this.options.pauseTime, this, false);
 			}
 			//Trigger the afterChange callback
 			this.fireEvent('afterChange');
@@ -290,7 +293,10 @@ var MivoSlider = new Class({
 	},
 
     // Private run method
-	nivoRun: function(slider, kids, settings, nudge) {
+	nivoRun: function(nudge) {
+		var slider = this.slider;
+		var kids = this.kids;
+		
 		//Trigger the lastSlide callback
 		if (this.vars && (this.currentSlide == this.totalSlides - 1)){ 
 			this.fireEvent('lastSlide');
@@ -332,7 +338,7 @@ var MivoSlider = new Class({
 		}
 		
 		// Set acitve links
-		if (settings.controlNav) {
+		if (this.options.controlNav) {
 			slider.getElements('.nivo-controlNav a').removeClass('active');
 			slider.getElement('.nivo-controlNav a:nth-child('+ (this.currentSlide + 1) +')').addClass('active');
 		}
@@ -362,6 +368,7 @@ var MivoSlider = new Class({
 		} else {
 			slider.getElement('.nivo-caption').fade('out');
 		}
+		
 		
 		//if (this.options.effect == 'random'){
 		//	var anims = ["sliceDownRight","sliceDownLeft","sliceUpRight","sliceUpLeft","sliceUpDown","sliceUpDownLeft","fold","fade"];
