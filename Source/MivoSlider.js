@@ -420,29 +420,28 @@ MivoSlider.Effect.Sliced = new Class({
 	}
 });
 
-MivoSlider.Effects = {
+MivoSlider.Effects = {};
 	
-	sliceDown: new Class({
-		Extends: MivoSlider.Effect.Sliced,
-		
-		initialize: function(mivoSlider, options) {
-			this.parent(mivoSlider, options);
-			this.startStyles = {top: 0, opacity: 0, height: 0};
-			this.animateStyles = {height: this.slider.getStyle('height').toInt(), opacity: 1};
-			this.finishStyles = {top: 'auto'};
-		}
-	}),
+MivoSlider.Effects.sliceDown = new Class({
+	Extends: MivoSlider.Effect.Sliced,
 	
-	sliceUp: new Class({
-		Extends: MivoSlider.Effect.Sliced,
-		
-		initialize: function(mivoSlider, options) {
-			this.parent(mivoSlider, options);
-			this.startStyles = {opacity: 0, height: 0};
-			this.animateStyles = {height: this.slider.getStyle('height').toInt(), opacity: 1};
-		}
-	})	
-};
+	initialize: function(mivoSlider, options) {
+		this.parent(mivoSlider, options);
+		this.startStyles = {top: 0, opacity: 0, height: 0};
+		this.animateStyles = {height: this.slider.getStyle('height').toInt(), opacity: 1};
+		this.finishStyles = {top: 'auto'};
+	}
+});
+	
+MivoSlider.Effects.sliceUp = new Class({
+	Extends: MivoSlider.Effect.Sliced,
+	
+	initialize: function(mivoSlider, options) {
+		this.parent(mivoSlider, options);
+		this.startStyles = {opacity: 0, height: 0};
+		this.animateStyles = {height: this.slider.getStyle('height').toInt(), opacity: 1};
+	}
+});	
 
 MivoSlider.Effects.sliceDownLeft = new Class({
 	Extends: MivoSlider.Effects.sliceDown,
