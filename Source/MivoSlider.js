@@ -121,12 +121,12 @@ var MivoSlider = new Class({
 		//In the words of Super Mario "let's a go!"
 		this.start();
 
-       //Add Direction nav
-       if (this.options.directionNav) {
+ 		//Add Direction nav
+		if (this.options.directionNav) {
 			this.directionNav = new Element('div.nivo-directionNav',{html: '<a class="nivo-prevNav">Prev</a><a class="nivo-nextNav">Next</a></div>'});
 			slider.grab(this.directionNav);
            
-           //Hide Direction nav
+			//Hide Direction nav
 			if (this.options.directionNavHide) {
 				slider.getElement('.nivo-directionNav').setStyle('display','none');
 				slider.addEvents({
@@ -160,15 +160,15 @@ var MivoSlider = new Class({
 					}
 			    } else {
 					nivoControl.grab(new Element('a.nivo-control[rel='+i+']', {html: (i + 1)}));
-			    }
+				}
 			}, this);
 
 			//Set initial active link
 			slider.getElements('.nivo-controlNav a:nth-child('+ (this.currentSlide + 1) +')').addClass('active');
            
 			slider.addEvent('click:relay(.nivo-controlNav a)', function(event, clicked) {
-               this.nivoRun(document.id(clicked).get('rel'));
-           }.bind(this));
+				this.nivoRun(document.id(clicked).get('rel'));
+			}.bind(this));
 		}
        
 		//Keyboard Navigation
@@ -179,7 +179,7 @@ var MivoSlider = new Class({
 					right: this.next.bind(this)
 				}
 			});
-       	}
+		}
        
 		//For pauseOnHover setting
 		if (this.options.pauseOnHover) {
@@ -246,7 +246,7 @@ var MivoSlider = new Class({
 		}
 	},
 
-    // Private run method
+	// Private run method
 	nivoRun: function(nudge) {
 		if (this.running || nudge == this.currentSlide) return false;
 		this.running = true;
@@ -284,8 +284,8 @@ var MivoSlider = new Class({
 		this.effects[Math.floor(Math.random()*this.numEffects)].start();
 	},
        
-    // For debugging
-    trace: function(msg) {
+	// For debugging
+	trace: function(msg) {
 		if (this.console && typeof console.log != "undefined") {
 			console.log(msg);
 		}
@@ -407,9 +407,6 @@ MivoSlider.Effect.Sliced = new Class({
 		this.slices[i].setStyles(typeOf(this.finishStyles) == 'array' ? this.finishStyles[i] : this.finishStyles);
 	}
 });
-
-
-
 
 MivoSlider.Effects = {};
 	
