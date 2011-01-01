@@ -60,7 +60,7 @@ var MivoSlider = new Class({
 		this.setOptions(options);
 		if (this.occlude('mivoSlider', element)) return this.occluded;
 
-		//Useful variables. Play carefully.
+		// Useful variables. Play carefully.
 		this.currentSlide = 0;
 		this.currentImage = '';
 		this.previousImage = '';
@@ -70,81 +70,37 @@ var MivoSlider = new Class({
 		this.paused = false;
 		this.stop = false;
    
-		//Get this slider
+		// Get this slider
 		var slider = this.slider = this.element = document.id(element);
 		slider.setStyle('position','relative');
 		slider.addClass('nivoSlider');
        
-		//Find our slider children
-		var kids = slider.getChildren();
-		this.kids = kids;
-		kids.each(function(child) {
-			var link = '';
-			if (!child.get('tag') == 'img') {
-				if(child.get('tag') == 'a'){
-					child.addClass('nivo-imageLink');
-					link = child;
-				}
-				child = child.getElement('img');
-			}
-			
-			//Get img width & height
-			var childWidth = child.getStyle('width').toInt();
-			if (childWidth == 0) childWidth = child.get('width');
-			var childHeight = child.getStyle('height').toInt();
-			if (childHeight == 0) childHeight = child.get('height');
-			
-			//Resize the slider
-			if (childWidth > slider.getStyle('width').toInt()) {
-				slider.setStyle('width',childWidth);
-			}
-			if (childHeight > slider.getStyle('height').toInt()){
-				slider.setStyle(height,childHeight);
-			}
-			if (link != '') {
-				link.setStyle('display','none');
-			}
-			child.setStyle('display','none');
-			this.totalSlides++;
-		}, this);
+		// Find our slider children
+		slider.getElements('> a').addClass('nivo-imageLink');
+		var kids = this.kids = slider.getElements(('> img, > a > img'));
+		var links = this.links = kids.map(function(child) {return child.getParent().get('tag') == 'a' ? child.getParent() : null});
+		this.totalSlides = kids.length;
+		var maxWidth = kids.map(function(child) {return child.getCoordinates().height || child.get('height')}).max();
+		var maxHeight = kids.map(function(child) {return child.getCoordinates().width || child.get('width')}).max();
+		if (maxWidth > 0) slider.setStyle('width', maxWidth);
+		if (maxHeight > 0) slider.setStyle('height', maxHeight);
+		$$(kids, links).setStyle('display', 'none');
        
-		//Set startSlide
-		if (this.options.startSlide > 0) {
-			if (this.options.startSlide >= this.totalSlides) this.options.startSlide = this.totalSlides - 1;
-			this.currentSlide = this.options.startSlide;
-		}
+		// Set startSlide
+		this.options.currentSlide = this.options.startSlide = [this.options.startSlide, this.totalSlides - 1].max();
 		
-		//Get initial image
-		if (kids[this.currentSlide].get('tag') == 'img') {
-			this.currentImage = kids[this.currentSlide];
-		} else {
-			this.currentImage = kids[this.currentSlide].getElement('img');
-		}
+		// Get initial image
+		this.currentImage = kids[this.currentSlide];
 		
-		//Show initial link
-		if (kids[this.currentSlide].get('tag') == 'a') {
-			kids[this.currentSlide].setStyle('display','block');
-		}
+		// Show initial link
+		if (links[this.currentSlide]) links[this.currentSlide].setStyle('display','block');
 		
-		//Set first background
+		// et first background
 		slider.setStyle('background','url("'+ this.currentImage.get('src') +'") no-repeat');
        
-		// Add initial slices
+		// Create effect
 		this.effect = new MivoSlider.Effects[this.options.effect](this, this.options.effectOptions[this.options.effect]);
-		
-		/*for (var i = 0; i < this.options.slices; i++) {
-			var sliceWidth = Math.round(slider.getStyle('width').toInt()/this.options.slices);
-			if (i == this.options.slices-1) {
-				slider.grab(
-					new Element('div.nivo-slice',{styles: {left:(sliceWidth*i)+'px', width:(slider.getStyle('width').toInt()-(sliceWidth*i))+'px'}})
-				);
-			} else {
-				slider.grab(
-					new Element('div.nivo-slice',{styles:{left:(sliceWidth*i)+'px', width:sliceWidth+'px'}})
-				);
-			}
-		}*/
-       
+
 		//Create caption
 		slider.grab(
 			new Element('div.nivo-caption',{html:'<p></p>', styles: {display:'none', opacity:this.options.captionOpacity}})
