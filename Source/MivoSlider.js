@@ -112,7 +112,6 @@ var MivoSlider = new Class({
 		this.captionTextTween = new Fx.Tween(this.captionText, {duration: this.options.animSpeed, onComplete: this.captionChain.callChain.bind(this.captionChain)});
 		this.captionTween = new Fx.Tween(this.caption, {duration: this.options.animSpeed, onComplete: this.captionChain.callChain.bind(this.captionChain)})
 		
-		 	
 		//Process initial caption
 		this.showCurrentCaption();
 		
@@ -191,7 +190,7 @@ var MivoSlider = new Class({
 	},
 	
 	start: function() {
-		if (!this.options.manualAdvance && this.kids.length && !this.paused) {
+		if (!this.options.manualAdvance && this.kids.length && !this.paused && !this.running) {
 			this.timer = this.next.delay(this.options.pauseTime, this);
 		}
 	},
@@ -202,8 +201,8 @@ var MivoSlider = new Class({
 	},
 	
 	resume: function() {
-		this.start();
 		this.paused = false;
+		this.start();
 	},
 	
 	next:function() {
@@ -238,8 +237,7 @@ var MivoSlider = new Class({
 			} else {	
 				this.captionText.set('html',title);
 				this.captionTween.start('opacity',this.options.captionOpacity);
-			}
-			
+			}	
 		} else {
 			this.slider.getElement('.nivo-caption').fade('out');
 		}
@@ -279,7 +277,6 @@ var MivoSlider = new Class({
 		}
 		
 		// Process caption
-		// TODO: Fix opacity and make robust
 		this.showCurrentCaption();
 		
 		
