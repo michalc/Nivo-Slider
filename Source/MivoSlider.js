@@ -62,6 +62,7 @@ var MivoSlider = new Class({
 
 		// Useful variables. Play carefully.
 		this.currentSlide = 0;
+		this.previousSlide = 0;
 		this.currentImage = '';
 		this.previousImage = '';
 		this.totalSlides = 0;
@@ -69,6 +70,7 @@ var MivoSlider = new Class({
 		this.running = false;
 		this.paused = false;
 		this.stop = false;
+		this.timer = 0;
    
 		// Get this slider
 		var slider = this.slider = this.element = document.id(element);
@@ -115,43 +117,28 @@ var MivoSlider = new Class({
 		}
 		
 		//In the words of Super Mario "let's a go!"
-		var timer = 0;
-		if (!this.options.manualAdvance && kids.length > 1){
-			timer = this.nivoRun.periodical(this.options.pauseTime, this, false);
-		}
+		this.start();
 
        //Add Direction nav
        if (this.options.directionNav) {
-			slider.grab(new Element('div.nivo-directionNav',{html: '<a class="nivo-prevNav">Prev</a><a class="nivo-nextNav">Next</a></div>'}));
+			this.directionNav = new Element('div.nivo-directionNav',{html: '<a class="nivo-prevNav">Prev</a><a class="nivo-nextNav">Next</a></div>'});
+			slider.grab(this.directionNav);
            
            //Hide Direction nav
 			if (this.options.directionNavHide) {
 				slider.getElement('.nivo-directionNav').setStyle('display','none');
 				slider.addEvents({
 					mouseenter: function() {
-						slider.getElement('.nivo-directionNav').setStyle('display','block');
-					},
+						this.directionNav.setStyle('display','block');
+					}.bind(this),
 					mouseleave: function() {
-						slider.getElement('.nivo-directionNav').setStyle('display','none');
-					}
+						this.directionNav.setStyle('display','none');
+					}.bind(this)
 				});
 			}
            
-	 
-			slider.addEvent('click:relay(a.nivo-prevNav)', function() {
-				if (this.running) return false;
-				clearInterval(timer);
-				timer = '';
-				this.currentSlide-=2;
-				this.nivoRun('prev');
-			}.bind(this));
-			
-			slider.addEvent('click:relay(a.nivo-nextNav)', function() {
-				if (this.running) return false;
-				clearInterval(timer);
-				timer = '';
-				this.nivoRun('next');
-			}.bind(this));
+			slider.addEvent('click:relay(a.nivo-prevNav)', this.prev.bind(this));
+			slider.addEvent('click:relay(a.nivo-nextNav)', this.next.bind(this));
 		}
        
 		//Add Control nav
@@ -178,13 +165,7 @@ var MivoSlider = new Class({
 			slider.getElements('.nivo-controlNav a:nth-child('+ (this.currentSlide + 1) +')').addClass('active');
            
 			slider.addEvent('click:relay(.nivo-controlNav a)', function(event, clicked) {
-               if (this.running) return false;
-               if (document.id(clicked).hasClass('active')) return false;
-               clearInterval(timer);
-               timer = '';
-               slider.setStyle('background','url("'+ this.currentImage.get('src') +'") no-repeat');
-               this.currentSlide = document.id(clicked).get('rel') - 1;
-               this.nivoRun('control');
+               this.nivoRun(document.id(clicked).get('rel'));
            }.bind(this));
 		}
        
@@ -192,19 +173,8 @@ var MivoSlider = new Class({
 		if (this.options.keyboardNav) {
 			new Keyboard({
 				events: {
-					left: function () {
-						if (this.running) return false;
-						clearInterval(timer);
-						timer = '';
-						this.currentSlide-=2;
-						this.nivoRun('prev');
-					},
-					right: function() {
-						if (this.running) return false;
-						clearInterval(timer);
-						timer = '';
-						this.nivoRun('next');
-					}
+					left: this.prev.bind(this),
+					right: this.next.bind(this)
 				}
 			});
        	}
@@ -212,89 +182,68 @@ var MivoSlider = new Class({
 		//For pauseOnHover setting
 		if (this.options.pauseOnHover) {
 			slider.addEvents({
-				mouseenter: function(){
-					this.paused = true;
-					clearInterval(timer);
-					timer = '';
-				}.bind(this),
-				mouseleave: function(){
-					this.paused = false;
-					// Restart the timer
-					if (timer == '' && !this.options.manualAdvance) {
-						timer = this.nivoRun.periodical(this.options.pauseTime, this, false);
-					}
-				}.bind(this)
+				mouseenter: this.pause.bind(this),
+				mouseleave: this.resume.bind(this)
 			});
 		}
-       
-		//Event when Animation finishes
-		this.addEvent('nivo:animFinished', function() { 
-			this.running = false;
-			//Hide child links
-			kids.each(function(child){
-				if (child.get('tag' == 'a')) {
-					child.setStyle('display','none');
-				}
-			});
-			//Show current link
-			if (kids[this.currentSlide].get('tag') == 'a') {
-				kids[this.currentSlide].setStyle('display','block');
-			}
-			//Restart the timer
-			if (timer == '' && !this.paused && !settings.manualAdvance) {
-				timer = this.nivoRun.periodical(this.options.pauseTime, this, false);
-			}
-			//Trigger the afterChange callback
-			this.fireEvent('afterChange');
-		});
 		
 		this.fireEvent('afterLoad');
+	},
+	
+	start: function() {
+		if (!this.options.manualAdvance && this.kids.length && !this.paused) {
+			this.timer = this.next.delay(this.options.pauseTime, this);
+		}
+	},
+	
+	pause: function() {
+		clearTimeout(this.timer);
+		this.paused = true;
+	},
+	
+	resume: function() {
+		this.start();
+		this.paused = false;
+	},
+	
+	next:function() {
+		this.nivoRun(this.currentSlide + 1);
+	},
+	
+	prev: function() {
+		this.nivoRun(this.currentSlide - 1);
+	},
+	
+	finished: function() {
+		this.running = false;
+		this.start();
+		this.fireEvent('afterChange');
 	},
 
     // Private run method
 	nivoRun: function(nudge) {
+		if (this.running || nudge == this.currentSlide) return false;
+		this.running = true;
+		this.previousSlide = this.currentSlide;
+		this.previousImage = this.currentImage;
+		this.currentSlide = Math.abs(nudge % this.totalSlides);
 		var slider = this.slider;
 		var kids = this.kids;
 		
 		//Trigger the lastSlide callback
-		if (this.vars && (this.currentSlide == this.totalSlides - 1)){ 
-			this.fireEvent('lastSlide');
-		}
-		   
-		// Stop
-		if((!this.vars || this.stop) && !nudge) return false;
+		if (this.currentSlide == this.totalSlides - 1) this.fireEvent('lastSlide');
 		
 		// Trigger the beforeChange callback
 		this.fireEvent('beforeChange');
 				
 		// Set current background before change
-		if (!nudge) {
-			slider.setStyle('background','url("'+ this.currentImage.get('src') +'") no-repeat');
-		} else {
-			if (nudge == 'prev') {
-				slider.setStyle('background','url("'+ this.currentImage.get('src') +'") no-repeat');
-			}
-			if (nudge == 'next') {
-				slider.setStyle('background','url("'+ this.currentImage.get('src') +'") no-repeat');
-			}
-		}
-		
-		this.currentSlide++;
+		slider.setStyle('background','url("'+ this.previousImage.get('src') +'") no-repeat');
 		
 		// Trigger the slideshowEnd callback
-		if (this.currentSlide == this.totalSlides) { 
-			this.currentSlide = 0;
-			this.fireEvent('slideshowEnd');
-		}
-		if(this.currentSlide < 0) this.currentSlide = (this.totalSlides - 1);
+		if (this.currentSlide == this.totalSlides - 1) {this.fireEvent('slideshowEnd');}
 		
 		// Set currentImage
-		this.previousImage = this.currentImage;
-		if (kids[this.currentSlide].get('tag') == 'img') {
-			this.currentImage = kids[this.currentSlide];
-		} else {
-			this.currentImage = kids[this.currentSlide].getElement('img');
-		}
+		this.currentImage = kids[this.currentSlide];
 		
 		// Set acitve links
 		if (this.options.controlNav) {
@@ -342,7 +291,6 @@ var MivoSlider = new Class({
 		//}
 		
 		// Run effects
-		this.running = true;
 		this.effect.start();
 	},
        
@@ -351,16 +299,6 @@ var MivoSlider = new Class({
 		if (this.console && typeof console.log != "undefined") {
 			console.log(msg);
 		}
-	},
-	
-	stop: function() {
-		this.stop = true;
-		this.trace('Stop Slider');
-	},
-	
-	start: function() {
-		this.stop = false;
-		this.trace('Start Slider');
 	},
 	
 	toElement: function() {
@@ -388,7 +326,7 @@ MivoSlider.Effect = new Class({
 	},
 	
 	finish: function() {
-		this.mivoSlider.fireEvent('nivo:animFinished');
+		this.mivoSlider.finished();
 	}
 });
 
