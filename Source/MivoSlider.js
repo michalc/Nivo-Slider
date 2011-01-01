@@ -71,6 +71,7 @@ var MivoSlider = new Class({
 		this.paused = false;
 		this.stop = false;
 		this.timer = 0;
+		this.captionChain = new Chain();
    
 		// Get this slider
 		var slider = this.slider = this.element = document.id(element);
@@ -103,18 +104,17 @@ var MivoSlider = new Class({
 		// Create effect
 		this.effect = new MivoSlider.Effects[this.options.effect](this, this.options.effectOptions[this.options.effect]);
 
-		//Create caption
-		slider.grab(
-			new Element('div.nivo-caption',{html:'<p></p>', styles: {display:'none', opacity:this.options.captionOpacity}})
-		);
+		// Create caption
+		this.captionText = new Element('p');
+		this.caption = new Element('div.nivo-caption',{styles: {opacity:0}});
+		this.caption.grab(this.captionText);
+		slider.grab(this.caption);
+		this.captionTextTween = new Fx.Tween(this.captionText, {duration: this.options.animSpeed, onComplete: this.captionChain.callChain.bind(this.captionChain)});
+		this.captionTween = new Fx.Tween(this.caption, {duration: this.options.animSpeed, onComplete: this.captionChain.callChain.bind(this.captionChain)})
+		
 		 	
 		//Process initial caption
-		if (this.currentImage.get('title') != '') {
-			var title = this.currentImage.get('title') || '';
-			if (title.substr(0,1) == '#') title = document.id(title).get('html');
-			slider.getElement('.nivo-caption p').set('html',title);	
-			slider.getElement('.nivo-caption').set('tween',{duration:this.options.animSpeed}).fade('in');
-		}
+		this.showCurrentCaption();
 		
 		//In the words of Super Mario "let's a go!"
 		this.start();
@@ -143,7 +143,7 @@ var MivoSlider = new Class({
        
 		//Add Control nav
 		if (this.options.controlNav) {
-			var nivoControl = new Element('div.nivo-controlNav');
+			var nivoControl = new Element('displayiv.nivo-controlNav');
 			slider.grab(nivoControl);
 			 
 			kids.each(function(child, i) {
@@ -219,6 +219,31 @@ var MivoSlider = new Class({
 		this.start();
 		this.fireEvent('afterChange');
 	},
+	
+	showCurrentCaption: function() {
+		if (this.currentImage.get('title')) {
+			var title = this.currentImage.get('title') || '';
+			if (title.substr(0,1) == '#') title = document.getElement(title).get('html');	
+			
+			if (this.previousImage && this.previousImage.get('title')) {
+				this.captionChain.chain(
+					function() {
+						this.captionTextTween.start('opacity', 0);
+					}.bind(this),
+					function() {
+						this.captionText.set('html', title);
+						this.captionTextTween.start('opacity', 1);
+					}.bind(this)
+				).callChain();		
+			} else {	
+				this.captionText.set('html',title);
+				this.captionTween.start('opacity',this.options.captionOpacity);
+			}
+			
+		} else {
+			this.slider.getElement('.nivo-caption').fade('out');
+		}
+	},
 
     // Private run method
 	nivoRun: function(nudge) {
@@ -226,7 +251,7 @@ var MivoSlider = new Class({
 		this.running = true;
 		this.previousSlide = this.currentSlide;
 		this.previousImage = this.currentImage;
-		this.currentSlide = Math.abs(nudge % this.totalSlides);
+		this.currentSlide = ((nudge % this.totalSlides) + this.totalSlides) % this.totalSlides;
 		var slider = this.slider;
 		var kids = this.kids;
 		
@@ -244,6 +269,8 @@ var MivoSlider = new Class({
 		
 		// Set currentImage
 		this.currentImage = kids[this.currentSlide];
+		$$(this.links).setStyle('dislay','none');
+		if (this.links[this.currentImage]) this.links[this.currentImage].setStyle('dispaly', 'block');
 		
 		// Set acitve links
 		if (this.options.controlNav) {
@@ -253,29 +280,7 @@ var MivoSlider = new Class({
 		
 		// Process caption
 		// TODO: Fix opacity and make robust
-		if (this.currentImage.get('title')) {
-			var title = this.currentImage.get('title') || '';
-			if (title.substr(0,1) == '#') title = document.getElement(title).get('html');	
-			
-			if (this.previousImage && this.previousImage.get('title')) {
-				var caption = slider.getElement('.nivo-caption p');
-				caption.set('tween', {duration:this.options.animSpeed});
-				var tween = caption.get('tween');
-				var comp = function() {
-					caption.set('html', title);
-					caption.fade('in');	
-					tween.removeEvents({complete:comp});
-				};
-				tween.addEvent('complete', comp);
-				caption.fade('out');
-			} else {	
-				slider.getElement('.nivo-caption p').set('html',title).setStyles({'display':'block', opacity:1});
-				slider.getElement('.nivo-caption').setStyles({display:'block', opacity:0}).fade('in');
-			}
-			
-		} else {
-			slider.getElement('.nivo-caption').fade('out');
-		}
+		this.showCurrentCaption();
 		
 		
 		//if (this.options.effect == 'random'){
