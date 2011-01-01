@@ -38,7 +38,7 @@ var MivoSlider = new Class({
 		manualAdvance: false,
 		captionOpacity: 0.8,
 		
-		randomAnimations: ["sliceDownRight","sliceDownLeft","sliceUpRight","sliceUpLeft","sliceUpDown","sliceUpDownLeft","fold","fade"],
+		randomEffects: ["sliceDownRight","sliceDownLeft","sliceUpRight","sliceUpLeft","sliceUpDown","sliceUpDownLeft","fade"],
 		
 		effectOptions: {
 			slideUp: {
@@ -87,8 +87,9 @@ var MivoSlider = new Class({
 		var maxHeight = kids.map(function(child) {return child.getCoordinates().width || child.get('width')}).max();
 		if (maxWidth > 0) slider.setStyle('width', maxWidth);
 		if (maxHeight > 0) slider.setStyle('height', maxHeight);
-		$$(kids, links).setStyle('display', 'none');
-       
+		kids.setStyle('display', 'none');
+		$$(links.clean()).setStyle('display','none');
+
 		// Set startSlide
 		this.options.currentSlide = this.options.startSlide = [this.options.startSlide, this.totalSlides - 1].max();
 		
@@ -101,8 +102,10 @@ var MivoSlider = new Class({
 		// et first background
 		slider.setStyle('background','url("'+ this.currentImage.get('src') +'") no-repeat');
        
-		// Create effect
-		this.effect = new MivoSlider.Effects[this.options.effect](this, this.options.effectOptions[this.options.effect]);
+		// Create effects
+		this.effects = this.options.effect == "random" ? this.options.randomEffects : [this.options.effect];
+		this.effects = this.effects.map(function(effect) {return new MivoSlider.Effects[effect](this, this.options.effectOptions[effect])}.bind(this));
+		this.numEffects = this.effects.length;
 
 		// Create caption
 		this.captionText = new Element('p');
@@ -142,7 +145,7 @@ var MivoSlider = new Class({
        
 		//Add Control nav
 		if (this.options.controlNav) {
-			var nivoControl = new Element('displayiv.nivo-controlNav');
+			var nivoControl = new Element('div.nivo-controlNav');
 			slider.grab(nivoControl);
 			 
 			kids.each(function(child, i) {
@@ -250,8 +253,6 @@ var MivoSlider = new Class({
 		this.previousSlide = this.currentSlide;
 		this.previousImage = this.currentImage;
 		this.currentSlide = ((nudge % this.totalSlides) + this.totalSlides) % this.totalSlides;
-		var slider = this.slider;
-		var kids = this.kids;
 		
 		//Trigger the lastSlide callback
 		if (this.currentSlide == this.totalSlides - 1) this.fireEvent('lastSlide');
@@ -260,40 +261,27 @@ var MivoSlider = new Class({
 		this.fireEvent('beforeChange');
 				
 		// Set current background before change
-		slider.setStyle('background','url("'+ this.previousImage.get('src') +'") no-repeat');
+		this.slider.setStyle('background','url("'+ this.previousImage.get('src') +'") no-repeat');
 		
 		// Trigger the slideshowEnd callback
 		if (this.currentSlide == this.totalSlides - 1) {this.fireEvent('slideshowEnd');}
 		
 		// Set currentImage
-		this.currentImage = kids[this.currentSlide];
-		$$(this.links).setStyle('dislay','none');
-		if (this.links[this.currentImage]) this.links[this.currentImage].setStyle('dispaly', 'block');
+		this.currentImage = this.kids[this.currentSlide];
+		$$(this.links.clean()).setStyle('display','none');
+		if (this.links[this.currentImage]) this.links[this.currentImage].setStyle('display', 'block');
 		
 		// Set acitve links
 		if (this.options.controlNav) {
-			slider.getElements('.nivo-controlNav a').removeClass('active');
-			slider.getElement('.nivo-controlNav a:nth-child('+ (this.currentSlide + 1) +')').addClass('active');
+			this.slider.getElements('.nivo-controlNav a').removeClass('active');
+			this.slider.getElement('.nivo-controlNav a:nth-child('+ (this.currentSlide + 1) +')').addClass('active');
 		}
 		
 		// Process caption
 		this.showCurrentCaption();
 		
-		
-		//if (this.options.effect == 'random'){
-		//	var anims = ["sliceDownRight","sliceDownLeft","sliceUpRight","sliceUpLeft","sliceUpDown","sliceUpDownLeft","fold","fade"];
-		//	this.randAnim = anims[Math.floor(Math.random()*(anims.length + 1))];
-		//	if (this.randAnim == undefined) this.randAnim = 'fade';
-		//}
-		   
-		// Run random effect from specified set (eg: effect:'fold,fade')
-		//if (settings.effect.indexOf(',') != -1) {
-		//	var anims = settings.effect.split(',');
-		//	randAnim = anims[Math.floor(Math.random()*anims.length)];
-		//}
-		
-		// Run effects
-		this.effect.start();
+		// Run effect	
+		this.effects[Math.floor(Math.random()*this.numEffects)].start();
 	},
        
     // For debugging
@@ -332,10 +320,11 @@ MivoSlider.Effect = new Class({
 	}
 });
 
+
 MivoSlider.Effect.Sliced = new Class({
-	
+
 	Extends: MivoSlider.Effect,
-	
+
 	options: {
 		timeInit: 100,
 		timeBuff: 50,
@@ -344,10 +333,10 @@ MivoSlider.Effect.Sliced = new Class({
 			duration: 500
 		}
 	},
-	
+
 	initialize: function(mivoSlider, options) {
 		this.parent(mivoSlider, options);
-		
+
 		this.startStyles = [];
 		this.animateStyles = [];
 		this.finishStyles = [];
@@ -355,42 +344,41 @@ MivoSlider.Effect.Sliced = new Class({
 
 		this.sliderWidth = this.slider.getStyle('width').toInt();
 		this.sliceWidth = Math.round(this.sliderWidth/this.options.slices);
-		
-		//Add initial slices
+
 		this.slices = [];
 		this.fx = [];
 		this.delays = [];
 
-		if (!this.occlude('mivoSlider.sliced', this.slider)) {
-			for (var i = 0; i < this.options.slices; i++) {
-				if (!this.slices[i]) {
-					this.slices[i] = new Element('div.nivo-slice', {
-						styles: {
-							left: (this.sliceWidth * i),
-							width: (i != this.options.slices-1) ? this.sliceWidth : this.sliderWidth - (this.sliceWidth * i),
-							'background-position': '-' + (this.sliceWidth + (i - 1) * this.sliceWidth) +'px 0%',
-							'background-repeat': 'no-repeat'
-						}
-					});
-					this.slider.grab(this.slices[i]);
-				}
-				this.fx[i] = new Fx.Morph(this.slices[i], 
-					Object.merge(this.options.fx, {
-						onComplete: this.finishSlice.pass([this.slices[i], i], this)
+		// Create Slices
+		this.slices = this.slider.retrieve('mivo:slices', []);
+		for (var i = 0; i < this.options.slices; i++) {
+			if (!this.slices[i]) {
+				this.slices[i] = new Element('div.nivo-slice', {
+					styles: {
+						left: (this.sliceWidth * i),
+						width: (i != this.options.slices-1) ? this.sliceWidth : this.sliderWidth - (this.sliceWidth * i),
+						'background-position': '-' + (this.sliceWidth + (i - 1) * this.sliceWidth) +'px 0%',
+						'background-repeat': 'no-repeat'
 					}
-				));
-				this.delays[i] = this.calculateDelay(i);
+				});
+				this.slider.grab(this.slices[i]);
 			}
+			this.fx[i] = new Fx.Morph(this.slices[i], 
+				Object.merge(this.options.fx, {
+					onComplete: this.finishSlice.pass([this.slices[i], i], this)
+				}
+			));
+			this.delays[i] = this.calculateDelay(i);
 		}
+
 		var g = new Group(this.fx);
 		g.addEvent('complete', this.finish.bind(this));
-		
 	},
-	
+
 	calculateDelay: function(i) {
 		return this.options.timeInit + i * this.options.timeBuff;
 	},
-	
+
 	start: function() {
 		var styles = {
 			height: 0,
@@ -401,24 +389,27 @@ MivoSlider.Effect.Sliced = new Class({
 		this.slices.each(function(slice, i) {slice.setStyles(styles)});
 		this.slices.each(this.startSlice.bind(this));
 	},
-	
+
 	initSlice: function(slice, i) {
-		
+
 	},
-	
+
 	startSlice: function(slice, i) {
 		this.slices[i].setStyles(typeOf(this.startStyles) == 'array' ? this.startStyles[i] : this.startStyles);
 		this.animateSlice.delay(typeOf(this.delays) == 'array' ? this.delays[i] : this.delays, this, [slice, i]);
 	},
-	
+
 	animateSlice: function(slice, i) {
 		this.fx[i].start(typeOf(this.animateStyles) == 'array' ? this.animateStyles[i] : this.animateStyles);
 	},
-	
+
 	finishSlice: function(slice, i) {
 		this.slices[i].setStyles(typeOf(this.finishStyles) == 'array' ? this.finishStyles[i] : this.finishStyles);
 	}
 });
+
+
+
 
 MivoSlider.Effects = {};
 	
@@ -430,25 +421,6 @@ MivoSlider.Effects.sliceDown = new Class({
 		this.startStyles = {top: 0, opacity: 0, height: 0};
 		this.animateStyles = {height: this.slider.getStyle('height').toInt(), opacity: 1};
 		this.finishStyles = {top: 'auto'};
-	}
-});
-	
-MivoSlider.Effects.sliceUp = new Class({
-	Extends: MivoSlider.Effect.Sliced,
-	
-	initialize: function(mivoSlider, options) {
-		this.parent(mivoSlider, options);
-		this.startStyles = {opacity: 0, height: 0};
-		this.animateStyles = {height: this.slider.getStyle('height').toInt(), opacity: 1};
-	}
-});	
-
-MivoSlider.Effects.sliceDownLeft = new Class({
-	Extends: MivoSlider.Effects.sliceDown,
-	
-	initialize: function(mivoSlider, options) {
-		this.parent(mivoSlider, options);		
-		this.delays = this.delays.reverse();
 	}
 });
 
@@ -463,12 +435,18 @@ MivoSlider.Effects.sliceUp = new Class({
 	}
 });
 
-MivoSlider.Effects.sliceUpLeft = new Class({
-	Extends: MivoSlider.Effects.sliceUp,
+MivoSlider.Effects.sliceUpDown = new Class({
+	Extends: MivoSlider.Effect.Sliced,
 	
 	initialize: function(mivoSlider, options) {
 		this.parent(mivoSlider, options);		
-		this.delays = this.delays.reverse();
+		this.startStyles = this.slices.map(function(slice, i) {
+			var o = {opacity: 0};
+			o[i % 2 == 0 ? 'top' : 'bottom'] = 0;
+			return o;
+		});
+		this.animateStyles = {height: this.slider.getStyle('height').toInt(), opacity: 1};
+		this.finishStyles = {bottom: 'auto', top: 'auto'};
 	}
 });
 
@@ -496,15 +474,18 @@ MivoSlider.Effects.fold = new Class({
 	}
 });
 
-MivoSlider.Effects.foldLeft = new Class({
-	Extends: MivoSlider.Effects.fold,
-	
-	initialize: function(mivoSlider, options) {
-		this.parent(mivoSlider, options);
-		this.delays = this.delays.reverse();
-	}
-});
+["sliceUp", "sliceDown", "sliceUpDown", "fold"].each(function(effect) {
+	MivoSlider.Effects[effect + "Right"] = MivoSlider.Effects[effect];
+	MivoSlider.Effects[effect + "Left"] = new Class ({
+		Extends: MivoSlider.Effects[effect],
 
+		initialize: function(mivoSlider, options) {
+			this.parent(mivoSlider, options);		
+			this.delays = this.delays.reverse();
+		}		
+	})	
+});
+		
 Element.implement({
 	mivoSlider: function(options) {
 		return new MivoSlider(this, options);
