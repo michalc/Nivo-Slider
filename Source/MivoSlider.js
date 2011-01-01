@@ -1,4 +1,7 @@
 /*
+ * MooTools Port of Nivo Slider
+ * Port by Michal Charemza
+ * 
  * jQuery Nivo Slider v2.3
  * http://nivo.dev7studios.com
  *
