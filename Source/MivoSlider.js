@@ -41,12 +41,8 @@ var MivoSlider = new Class({
 		randomEffects: ["sliceDownRight","sliceDownLeft","sliceUpRight","sliceUpLeft","sliceUpDown","sliceUpDownLeft","fade"],
 		
 		effectOptions: {
-			slideUp: {
-				slices: 15,
-				fx: {
-					duration: 500
-				}
-			}
+			common: {},	
+			specific: {}	
 		},
 		
 		onBeforeChange: Function.from(),
@@ -104,7 +100,7 @@ var MivoSlider = new Class({
        
 		// Create effects
 		this.effects = this.options.effect == "random" ? this.options.randomEffects : [this.options.effect];
-		this.effects = this.effects.map(function(effect) {return new MivoSlider.Effects[effect](this, this.options.effectOptions[effect])}.bind(this));
+		this.effects = this.effects.map(function(effect) {return new MivoSlider.Effects[effect](this, this.options.effectOptions.specific[effect])}.bind(this));
 		this.numEffects = this.effects.length;
 
 		// Create caption
@@ -306,9 +302,10 @@ MivoSlider.Effect = new Class({
 	options: {},
 	
 	initialize: function(mivoSlider, options) {
-		this.setOptions(options);
 		this.mivoSlider = mivoSlider;
 		this.slider = mivoSlider.toElement();
+		this.setOptions(mivoSlider.options.effectOptions.common);
+		this.setOptions(options);
 	},
 	
 	start: function() {
@@ -351,7 +348,8 @@ MivoSlider.Effect.Sliced = new Class({
 
 		// Create Slices
 		this.slices = this.slider.retrieve('mivo:slices', []);
-		for (var i = 0; i < this.options.slices; i++) {
+		var total = this.slices.length || this.options.slices
+		for (var i = 0; i < total; i++) {
 			if (!this.slices[i]) {
 				this.slices[i] = new Element('div.nivo-slice', {
 					styles: {
