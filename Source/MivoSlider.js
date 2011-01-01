@@ -239,7 +239,7 @@ var MivoSlider = new Class({
 				this.captionTween.start('opacity',this.options.captionOpacity);
 			}	
 		} else {
-			this.slider.getElement('.nivo-caption').fade('out');
+			this.captionTween.start('opacity', 0);
 		}
 	},
 
